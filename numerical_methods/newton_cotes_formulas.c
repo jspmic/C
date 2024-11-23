@@ -41,9 +41,15 @@ typedef double (*method)(function, int, double, double);
 // Functions representing all the solving methods implemented
 
 double trapezoid(function, int, double, double);
+double simpson1_3(function, int, double, double);
+double simpson3_8(function, int, double, double);
 double mid_point_rule(function, int, double, double);
 
 // Example functions to integrate
+
+double f(double x){
+	return x;
+}
 
 double f1(double x){
 	return x*x;
@@ -81,6 +87,8 @@ int main(void){
 	printf("Integration bounds(separated by a space): ");
 	scanf("%d %d", &a, &b);
 	example(trapezoid, "trapezoid", f1, a, b);
+	example(simpson1_3, "simpson 1/3", f1, a, b);
+	example(simpson1_3, "simpson 3/8", f1, a, b);
 	example(mid_point_rule, "mid-point", f1, a, b);
 	return EXIT_SUCCESS;
 }
@@ -100,6 +108,24 @@ double trapezoid(function f, int n, double a, double b){
 	return area*h;
 }
 
+// Simpson 1/3
+double simpson1_3(function f, int n, double a, double b){
+	double area=f(a)+f(b), h = (b-a)/n;
+
+	for (int i=1; i<n; i++){
+		area += i%2 == 0 ? 2*f(a + i*h) : 4*f(a + i*h);
+	}
+	return (area*h)/3;
+}
+
+double simpson3_8(function f, int n, double a, double b){
+	double area=f(a)+f(b), h = (b-a)/n;
+
+	for (int i=1; i<n; i++){
+		area += i%3 == 0 ? 2*f(a + i*h) : 3*f(a + i*h);
+	}
+	return 3*(area*h)/8;
+}
 // Open methods section
 
 double mid_point_rule(function f, int n, double a, double b){
