@@ -44,6 +44,7 @@ double trapezoid(function, int, double, double);
 double simpson1_3(function, int, double, double);
 double simpson3_8(function, int, double, double);
 double mid_point_rule(function, int, double, double);
+double boole(function, int, double, double);
 
 // Example functions to integrate
 
@@ -90,6 +91,7 @@ int main(void){
 	example(simpson1_3, "simpson 1/3", f1, a, b);
 	example(simpson1_3, "simpson 3/8", f1, a, b);
 	example(mid_point_rule, "mid-point", f1, a, b);
+	example(boole, "boole", f1, a, b);
 	return EXIT_SUCCESS;
 }
 
@@ -126,6 +128,20 @@ double simpson3_8(function f, int n, double a, double b){
 	}
 	return 3*(area*h)/8;
 }
+
+double boole(function f, int n, double a, double b){
+	double area=7*(f(a)+f(b)), h = (b-a)/n;
+
+	for (int i=1; i<n; i++){
+		if (i%2 != 0)
+			area += 32*f(a + i*h);
+		else{
+			area += i%4 == 0 ? 14*f(a + i*h) : 12*f(a + i*h);
+		}
+	}
+	return 2*(area*h)/45;
+}
+
 // Open methods section
 
 double mid_point_rule(function f, int n, double a, double b){
