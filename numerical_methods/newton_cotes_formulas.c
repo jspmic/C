@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-#define MAX_ITERATIONS 100
+#include <assert.h>
 
 /*
 
@@ -18,8 +17,25 @@
 
 
 /*
+ * @brief: Compares 2 doubles
+ * @param d1 the first number of type double
+ * @param d2 the second number of type double
+ * @param p the precision
+ * return 1 if they are equal using the precision p, 0 otherwise
+*/
+
+#define COMPARE_DOUBLE(d1, d2, p) 						\
+	(((d1 - p) < d2) && ((d1 + p) > d2)) ? 1 : 0
+
+#define MAX_ITERATIONS 100
+
+#define FUNCTION(n) f##n
+#define EXPAND(x) FUNCTION(x) // Expand the given function_code to the corresponding function
+#define DEFAULT 0 // the default function is f0, change this to use another function
+
+/*
  * @brief: Function that represents the function to integrate
- * @args: Takes a double as an argument to generalize all values of the input
+ * @param: Takes a double as a parameter to generalize all values of the input
  * @examples: f(x) = y, x is the input, y is the output
 */
 typedef double (*function)(double);
@@ -28,17 +44,20 @@ typedef double (*function)(double);
 /*
 
  * @brief: Function that represents a method to solve an integral
- * @args:
- - function: Function to integrate
- - An integer that represents the number of iterations to make when estimating the ssolution
- - A double that represents the lower bound
- - Another double that represents the upper bound
+ * @params:
+	 - function: Function to integrate
+	 - An integer that represents the number of iterations to make when estimating the ssolution
+	 - A double that represents the lower bound
+	 - Another double that represents the upper bound
 
 */
 
 typedef double (*method)(function, int, double, double);
 
-// Functions representing all the solving methods implemented
+/*
+ * @brief: All the integral-finding functions implemented
+ * @description: These functions follow the same syntax as `method`
+*/
 
 double trapezoid(function, int, double, double);
 double simpson1_3(function, int, double, double);
@@ -46,23 +65,27 @@ double simpson3_8(function, int, double, double);
 double mid_point_rule(function, int, double, double);
 double boole(function, int, double, double);
 
-// Example functions to integrate
 
-double f(double x){
-	return x;
+/*
+ * Example functions to integrate
+*/
+
+double f0(double x){
+	return x;  // Linear function
 }
 
 double f1(double x){
-	return x*x;
+	return x*x;  // Quadratic function: x²
 }
 
 double f2(double x){
-	return x*x*x;
+	return x*x*x;  // Cubic function: x³
 }
+
 
 /*
  * @brief: Function that generate an example for each solving method function
- * @args:
+ * @params:
 	 - method: The function representing the method used
 	 - method_name: The name of the method used
 	 - f: function to integrate
@@ -78,26 +101,58 @@ void example(method _method, const char* method_name, function f, double a, doub
 	printf("---------------\n");
 }
 
+
 /*
- * @brief: The main function
- * @args: Takes no argument
+ * @brief: Tests implementation
+ * @returns: nothing
+*/
+void test(void){
+	double result = 4.0, precision = 0.00001;
+	assert(COMPARE_DOUBLE(trapezoid(EXPAND(DEFAULT), MAX_ITERATIONS, 1, 3), result, precision) == 1);
+	assert(COMPARE_DOUBLE(simpson1_3(EXPAND(DEFAULT), MAX_ITERATIONS, 1, 3), result, precision) == 1);
+
+	// The 3/8 rule can't find the integral with a linear function as the integrand
+	assert(COMPARE_DOUBLE(simpson3_8(EXPAND(DEFAULT), MAX_ITERATIONS, 1, 3), result, precision) == 0);
+
+	assert(COMPARE_DOUBLE(mid_point_rule(EXPAND(DEFAULT), MAX_ITERATIONS, 1, 3), result, precision) == 1);
+	assert(COMPARE_DOUBLE(boole(EXPAND(DEFAULT), MAX_ITERATIONS, 1, 3), result, precision) == 1);
+
+	printf("All tests ran successfully...");
+}
+
+
+/*
+ * @brief: Function to allow the user to input values and test the script
+ * @returns: nothing
 */
 
-int main(void){
+void experimentation(void){
 	int a, b;
 	printf("Integration bounds(separated by a space): ");
 	scanf("%d %d", &a, &b);
-	example(trapezoid, "trapezoid", f1, a, b);
-	example(simpson1_3, "simpson 1/3", f1, a, b);
-	example(simpson1_3, "simpson 3/8", f1, a, b);
-	example(mid_point_rule, "mid-point", f1, a, b);
-	example(boole, "boole", f1, a, b);
-	return EXIT_SUCCESS;
+	example(trapezoid, "trapezoid", EXPAND(DEFAULT), a, b);
+	example(simpson1_3, "simpson 1/3", EXPAND(DEFAULT), a, b);
+	example(simpson1_3, "simpson 3/8", EXPAND(DEFAULT), a, b);
+	example(mid_point_rule, "mid-point", EXPAND(DEFAULT), a, b);
+	example(boole, "boole", EXPAND(DEFAULT), a, b);
 }
 
 /*
- The section below contains different methods to solve definite integrals
+ * @brief: The main function
+ * @params: Takes no parameters
+ * @returns 0(EXIT_SUCCESS) if no error occured
 */
+int main(void){
+	test(); // call experimentation() to test for yourself this script
+	return EXIT_SUCCESS;
+}
+
+
+/*
+ The section below contains different methods to solve definite integrals
+ Check the @reference at the beginning of the file to learn more about them.
+*/
+
 
 // Closed methods section
 
@@ -110,7 +165,6 @@ double trapezoid(function f, int n, double a, double b){
 	return area*h;
 }
 
-// Simpson 1/3
 double simpson1_3(function f, int n, double a, double b){
 	double area=f(a)+f(b), h = (b-a)/n;
 
@@ -142,7 +196,8 @@ double boole(function f, int n, double a, double b){
 	return 2*(area*h)/45;
 }
 
-// Open methods section
+
+// Open method section
 
 double mid_point_rule(function f, int n, double a, double b){
 	double h = (b-a)/n;
